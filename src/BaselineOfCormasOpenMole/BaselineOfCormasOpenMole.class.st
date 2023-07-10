@@ -23,5 +23,5 @@ BaselineOfCormasOpenMole >> loadCormas: spec [
 
 	spec
 		baseline: 'Cormas'
-		with: [ spec loads: #(Core); repository: 'github://cormas/cormas:v0.5' ]
+		with: [ spec loads: #(Core); repository: 'github://cormas/cormas' ]
 ]
