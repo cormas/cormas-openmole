@@ -14,7 +14,7 @@ In your [Pharo image](https://pharo.org/download), open the Playground (Ctrl+OW)
 Metacello new
     onConflictUseLoaded;
     baseline: 'CormasOpenMole';
-    repository: 'github://cormas/cormas-openmole';
+    repository: 'github://cormas/cormas-openmole:main';
     load.
 ```
 
