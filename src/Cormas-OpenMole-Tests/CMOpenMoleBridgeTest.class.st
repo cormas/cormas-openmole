@@ -19,20 +19,23 @@ CMOpenMoleBridgeTest >> setUp [
 ]
 
 { #category : #tests }
-CMOpenMoleBridgeTest >> testLastDataOfModel [
+CMOpenMoleBridgeTest >> testLoadFinalTime [
 
-	| data expectedData |
+	| contents file |
+	
+	contents := '{ 
+		"finalTime": 8,
+		"numberOfRows": 10,
+		"numberOfColumns": 13,
+		"initialNumberOfAgents": 2
+	}'.
+	
+	file := FileSystem memory / 'input.json'.
+	file writeStreamDo: [ :stream | stream nextPutAll: contents ].
 
-	model initializeSimulation.
-	5 timesRepeat: [ model runStep ].
-	
-	data := CMOpenMoleBridge lastDataOfModel: model.
-	
-	expectedData := {
-		#numberOfAliveAgents -> model class defaultInitialNumberOfAgents .
-		#numberOfDeadAgents -> 0 } asDictionary.
-	
-	self assert: data equals: expectedData.
+	model loadInputParametersFromJson: file.
+
+	self assert: model simulationManager finalTime equals: 8.
 ]
 
 { #category : #tests }

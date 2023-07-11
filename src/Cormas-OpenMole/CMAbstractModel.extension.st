@@ -1,6 +1,12 @@
 Extension { #name : #CMAbstractModel }
 
 { #category : #'*Cormas-OpenMole' }
+CMAbstractModel >> finalTime: aNumber [
+
+	self simulationManager finalTime: aNumber
+]
+
+{ #category : #'*Cormas-OpenMole' }
 CMAbstractModel >> loadInputParametersFromJson: aFileReference [
 
 	| jsonString parameters selector |
@@ -18,9 +24,22 @@ CMAbstractModel >> loadInputParametersFromJson: aFileReference [
 ]
 
 { #category : #'*Cormas-OpenMole' }
-CMAbstractModel >> runOpenMoleSimulation [
+CMAbstractModel class >> runOpenMoleSimulation [
 
-	"TODO"
+	| inputFile outputFile model |
+	
+	inputFile := FileSystem disk workingDirectory / 'input.json'.
+	outputFile := FileSystem disk workingDirectory / 'output.json'.
+
+	model := self new
+		loadInputParametersFromJson: inputFile;
+		initializeSimulation;
+		yourself.
+		
+	"TODO: Move this number into the input file!!"
+	10 timesRepeat: [ model runStep ].
+	
+
 ]
 
 { #category : #'*Cormas-OpenMole' }
