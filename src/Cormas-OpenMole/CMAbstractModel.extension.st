@@ -36,8 +36,8 @@ CMAbstractModel class >> runOpenMoleSimulation [
 		initializeSimulation;
 		yourself.
 		
-	"TODO: Move this number into the input file!!"
-	10 timesRepeat: [ model runStep ].
+	model simulationManager runSimulation.
+	model saveProbesToJson: outputFile.
 	
 
 ]
