@@ -3,7 +3,7 @@ val cormasResults = Val[File]
 
 def CormasTask(
   image: String,
-  parameters: Seq[(Val[Int], String)],
+  parameters: Seq[(Val[_], String)],
   probes: Seq[(Val[Double], String)]
 ) = {
 

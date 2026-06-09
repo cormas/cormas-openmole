@@ -9,13 +9,26 @@ parameterArguments := Smalltalk arguments
   select: [ :each | each includesSubstring: '=' ].
 
 parameterArguments do: [ :argument |
-  | parts name value |
+  | parts fullName value nameParts target parameterName |
+
   parts := argument splitOn: $=.
-  name := parts first.
+  fullName := parts first.
   value := STONJSON fromString: parts second.
 
-  model
-    perform: name asSymbol asMutator
+  nameParts := fullName splitOn: $..
+
+  nameParts size = 1
+    ifTrue: [
+      target := model.
+      parameterName := nameParts first
+    ]
+    ifFalse: [
+      target := Smalltalk at: nameParts first asSymbol.
+      parameterName := nameParts second
+    ].
+
+  target
+    perform: parameterName asSymbol asMutator
     with: value
 ].
 
