@@ -1,6 +1,6 @@
 Metacello new
   baseline: 'Cormas';
   repository: 'github://cormas/cormas:dev';
-  load.
+  load: #Core.
 
 Smalltalk snapshot: true andQuit: true.
