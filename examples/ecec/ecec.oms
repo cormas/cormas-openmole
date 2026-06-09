@@ -1,0 +1,31 @@
+import _file_.cormas._
+
+val rows = Val[Int]
+val cols = Val[Int]
+
+val totalAmountOfBiomass = Val[Double]
+val numberOfRestrainedForagers = Val[Double]
+val numberOfUnrestrainedForagers = Val[Double]
+
+val runCormas = CormasTask(
+  image = "oleks42/cormas-openmole:latest",
+  parameters = Seq(
+    rows -> "numberOfRows",
+    cols -> "numberOfColumns"
+  ),
+  probes = Seq(
+    totalAmountOfBiomass -> "totalAmountOfBiomass",
+    numberOfRestrainedForagers -> "numberOfRestrainedForagers",
+    numberOfUnrestrainedForagers -> "numberOfUnrestrainedForagers"
+  )
+)
+
+val exploration =
+  DirectSampling(
+    evaluation = runCormas,
+    sampling =
+      (rows in (10 to 20 by 10)) x
+      (cols in (10 to 20 by 10))
+  )
+
+exploration hook (workDirectory / "summary")

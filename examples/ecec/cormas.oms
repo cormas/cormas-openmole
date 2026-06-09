@@ -1,0 +1,58 @@
+val cormasConfig = Val[File]
+val cormasResults = Val[File]
+
+def CormasTask(
+  image: String,
+  parameters: Seq[(Val[Int], String)],
+  probes: Seq[(Val[Double], String)]
+) = {
+
+  val parameterArguments =
+    parameters
+      .map { case (v, name) => s"$name=$${${v.name}}" }
+      .mkString(" ")
+
+  val run =
+    ContainerTask(
+      image,
+      s"/app/run-cormas.sh /work/config.json $parameterArguments"
+    ) set (
+      inputs ++= parameters.map(_._1),
+      inputFiles += (cormasConfig, "config.json"),
+      outputFiles += ("/app/results.json", cormasResults),
+      cormasConfig := workDirectory / "config.json"
+    )
+
+  val probeDeclarations =
+    probes.map { case (v, _) =>
+      s"var ${v.name} = 0.0"
+    }.mkString("\n")
+
+  val probeAssignments =
+    probes.map { case (v, jsonName) =>
+      s"""${v.name} = number("$jsonName")"""
+    }.mkString("\n")
+
+  val parse =
+    ScalaTask(s"""
+      $probeDeclarations
+
+      val text = scala.io.Source.fromFile(cormasResults).mkString
+
+      def number(name: String): Double = {
+        val afterName = text.split(name)(1)
+        val afterColon = afterName.split(":")(1).trim
+        val rawNumber = afterColon.takeWhile(c =>
+          c.isDigit || c == '.' || c == '-' || c == '+' || c == 'E' || c == 'e'
+        )
+        rawNumber.toDouble
+      }
+
+      $probeAssignments
+    """) set (
+      inputs += cormasResults,
+      outputs ++= probes.map(_._1)
+    )
+
+  run -- parse
+}

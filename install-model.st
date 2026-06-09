@@ -1,6 +1,6 @@
 | config |
 
-config := STONJSON fromString: '/work/config.json' asFileReference contents.
+config := STONJSON fromString: 'config.json' asFileReference contents.
 
 Metacello new
   baseline: (config at: 'baselineName');
