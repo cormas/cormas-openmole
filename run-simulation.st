@@ -20,7 +20,7 @@ writeResults := [
   '/work/results.json' asFileReference
     ensureDelete;
     writeStreamDo: [ :stream |
-      stream nextPutAll: (STONJSON toString: results)]
+      stream nextPutAll: (STONJSON toString: results)
     ].
 
   Smalltalk snapshot: false andQuit: true
