@@ -1,9 +1,4 @@
 {
-  "repositoryOwner": "cormas",
-  "repositoryName": "ecec-model",
-  "version": "dev",
-  "baselineName": "ECECModel",
-  "modelClass": "ECECModel",
   "initSelector": "homogeneousEnvironment",
   "stepSelector": "step",
   "numberOfSteps": 100,

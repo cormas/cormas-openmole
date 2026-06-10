@@ -10,6 +10,7 @@ val numberOfUnrestrainedForagers = Val[Double]
 
 val runCormas = CormasTask(
   image = "oleks42/cormas-openmole:latest",
+  modelFile = workDirectory / "ECEC.cmx",
   parameters = Seq(
     r -> "ECECVegetationUnit.r",
     k -> "ECECVegetationUnit.k",

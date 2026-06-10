@@ -1,8 +1,7 @@
 | config modelClass model parameterArguments writeResults |
 
 config := STONJSON fromString: 'config.json' asFileReference contents.
-
-modelClass := Smalltalk at: (config at: 'modelClass') asSymbol.
+modelClass := CMModel installModelFromFile: 'model.cmx' asFileReference.
 model := modelClass new.
 
 parameterArguments := Smalltalk arguments

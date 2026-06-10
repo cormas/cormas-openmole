@@ -20,7 +20,6 @@ RUN printf "[safe]\n\tdirectory = *\n" > /etc/gitconfig
 
 # Install scripts
 COPY install-cormas.st /app/install-cormas.st
-COPY install-model.st /app/install-model.st
 COPY run-simulation.st /app/run-simulation.st
 COPY run-cormas.sh /app/run-cormas.sh
 
