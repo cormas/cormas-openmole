@@ -20,10 +20,10 @@ RUN printf "[safe]\n\tdirectory = *\n" > /etc/gitconfig
 
 # Install scripts
 COPY install-cormas.st /app/install-cormas.st
-COPY run-simulation.st /app/run-simulation.st
-COPY run-cormas.sh /app/run-cormas.sh
+COPY simulation.st /app/simulation.st
+COPY run.sh /app/run.sh
 
-RUN chmod +x /app/run-cormas.sh
+RUN chmod +x /app/run.sh
 
 # Install Cormas once when building the image
 RUN ./pharo --headless Pharo.image st /app/install-cormas.st

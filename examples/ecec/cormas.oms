@@ -1,29 +1,47 @@
-val cormasConfig = Val[File]
 val cormasModelFile = Val[File]
 val cormasResults = Val[File]
 
 def CormasTask(
   image: String,
   modelFile: File,
+  initSelector: String,
+  stepSelector: String,
+  maxSteps: Int,
+  stopCondition: String,
+  seed: Val[Int],
   parameters: Seq[(Val[_], String)],
   probes: Seq[(Val[Double], String)]
 ) = {
 
   val parameterArguments =
     parameters
-      .map { case (v, name) => s"$name=$${${v.name}}" }
+      .map { case (v, name) => s"parameter:$name=$${${v.name}}" }
       .mkString(" ")
+
+  val probeArguments =
+    probes
+      .map { case (_, name) => s"probe:$name" }
+      .mkString(" ")
+
+  val command =
+    s"/app/run.sh /work/model.cmx " +
+    s"initSelector=$initSelector " +
+    s"stepSelector=$stepSelector " +
+    s"maxSteps=$maxSteps " +
+    s"stopCondition=$stopCondition " +
+    s"seed=$${${seed.name}} " +
+    parameterArguments + " " +
+    probeArguments
 
   val run =
     ContainerTask(
       image,
-      s"/app/run-cormas.sh /work/config.json /work/model.cmx $parameterArguments"
+      command
     ) set (
+      inputs += seed,
       inputs ++= parameters.map(_._1),
-      inputFiles += (cormasConfig, "config.json"),
       inputFiles += (cormasModelFile, "model.cmx"),
       outputFiles += ("/app/results.json", cormasResults),
-      cormasConfig := workDirectory / "config.json",
       cormasModelFile := modelFile
     )
 

@@ -3,6 +3,7 @@ import _file_.cormas._
 val r = Val[Double]
 val k = Val[Int]
 val catabolicRate = Val[Int]
+val mySeed = Val[Int]
 
 val totalAmountOfBiomass = Val[Double]
 val numberOfRestrainedForagers = Val[Double]
@@ -11,10 +12,13 @@ val numberOfUnrestrainedForagers = Val[Double]
 val runCormas = CormasTask(
   image = "oleks42/cormas-openmole:latest",
   modelFile = workDirectory / "ECEC.cmx",
+  initSelector = "homogeneousEnvironment",
+  stepSelector = "step",
+  maxSteps = 100,
+  stopCondition = "",
+  seed = mySeed,
   parameters = Seq(
-    r -> "ECECVegetationUnit.r",
     k -> "ECECVegetationUnit.k",
-    catabolicRate -> "ECECForager.catabolicRate"
   ),
   probes = Seq(
     totalAmountOfBiomass -> "totalAmountOfBiomass",
@@ -27,9 +31,8 @@ val exploration =
   DirectSampling(
     evaluation = runCormas,
     sampling =
-      (r in (0.1 to 0.9 by 0.1)) x
-      (k in (1 to 20 by 5)) x
-      (catabolicRate in (1 to 5 by 1))
+      (mySeed in (1 to 10)) x
+      (k in (1 to 20 by 5))
   )
 
 exploration hook (workDirectory / "summary")
