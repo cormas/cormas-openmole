@@ -1,0 +1,32 @@
+import _file_.cormas._
+
+val numberOfFirefighters = Val[Int]
+val mySeed = Val[Int]
+
+val stepsToExtinguish = Val[Double]
+
+val runCormas = CormasTask(
+  image = "oleks42/cormas-openmole:latest",
+  modelFile = workDirectory / "Firefighters.cmx",
+  initSelector = "basicCreation",
+  stepSelector = "basicStep",
+  maxSteps = 50000,
+  stopCondition = "areAllExtinguished",
+  seed = mySeed,
+  parameters = Seq(
+    numberOfFirefighters -> "numberOfFirefighters",
+  ),
+  probes = Seq(
+    stepsToExtinguish -> "currentTimeStep"
+  )
+)
+
+val exploration =
+  DirectSampling(
+    evaluation = runCormas,
+    sampling =
+      (mySeed in (1 to 20)) x
+      (numberOfFirefighters in (1 to 20 by 1))
+  )
+
+exploration hook (workDirectory / "summary")
