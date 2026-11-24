@@ -24,7 +24,7 @@ def CormasTask(
       .mkString(" ")
 
   val command =
-    s"/app/run.sh /work/model.cmx " +
+    s"/app/run.sh /work/model.zip " +
     s"initSelector=$initSelector " +
     s"stepSelector=$stepSelector " +
     s"maxSteps=$maxSteps " +
@@ -40,7 +40,7 @@ def CormasTask(
     ) set (
       inputs += seed,
       inputs ++= parameters.map(_._1),
-      inputFiles += (cormasModelFile, "model.cmx"),
+      inputFiles += (cormasModelFile, "model.zip"),
       outputFiles += ("/app/results.json", cormasResults),
       cormasModelFile := modelFile
     )
@@ -62,8 +62,10 @@ def CormasTask(
       val text = scala.io.Source.fromFile(cormasResults).mkString
 
       def number(name: String): Double = {
-        val afterName = text.split(name)(1)
-        val afterColon = afterName.split(":")(1).trim
+        val key = '"'.toString + name + '"'.toString
+        val start = text.indexOf(key)
+        if (start < 0) throw new RuntimeException("Cormas returned no value for the probe " + name)
+        val afterColon = text.substring(text.indexOf(':', start + key.length) + 1).trim
         val rawNumber = afterColon.takeWhile(c =>
           c.isDigit || c == '.' || c == '-' || c == '+' || c == 'E' || c == 'e'
         )

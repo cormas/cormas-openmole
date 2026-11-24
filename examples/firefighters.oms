@@ -7,7 +7,7 @@ val stepsToExtinguish = Val[Double]
 
 val runCormas = CormasTask(
   image = "oleks42/cormas-openmole:latest",
-  modelFile = workDirectory / "Firefighters.cmx",
+  modelFile = workDirectory / "Firefighters.zip",
   initSelector = "basicCreation",
   stepSelector = "basicStep",
   maxSteps = 50000,

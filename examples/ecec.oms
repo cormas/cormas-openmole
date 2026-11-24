@@ -11,7 +11,7 @@ val numberOfUnrestrainedForagers = Val[Double]
 
 val runCormas = CormasTask(
   image = "oleks42/cormas-openmole:latest",
-  modelFile = workDirectory / "ECEC.cmx",
+  modelFile = workDirectory / "ECEC.zip",
   initSelector = "homogeneousEnvironment",
   stepSelector = "step",
   maxSteps = 100,

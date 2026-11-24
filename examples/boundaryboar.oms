@@ -1,0 +1,36 @@
+import _file_.cormas._
+
+val drivenHuntLethality = Val[Double]
+val mySeed = Val[Int]
+
+val boars = Val[Double]
+val urbanBoars = Val[Double]
+val collisions = Val[Double]
+
+val runCormas = CormasTask(
+  image = "oleks42/cormas-openmole:latest",
+  modelFile = workDirectory / "BoundaryBoar.zip",
+  initSelector = "initMontpellier",
+  stepSelector = "step",
+  maxSteps = 38,
+  stopCondition = "",
+  seed = mySeed,
+  parameters = Seq(
+    drivenHuntLethality -> "BBDrivenHunt.lethality"
+  ),
+  probes = Seq(
+    boars -> "boars",
+    urbanBoars -> "urbanBoars",
+    collisions -> "collisions"
+  )
+)
+
+val exploration =
+  DirectSampling(
+    evaluation = runCormas,
+    sampling =
+      (mySeed in (1 to 5)) x
+      (drivenHuntLethality in Seq(0.05, 0.1, 0.2, 0.4))
+  )
+
+exploration hook (workDirectory / "summary")

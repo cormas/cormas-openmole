@@ -1,90 +1,77 @@
-| modelClass model arguments argNamed parameterArguments probeArguments initSelector stepSelector maxSteps stopConditionSelector stopCondition seed writeResults |
+"Run one simulation of a zipped Cormas model, and write the final value of each probe to a JSON file.
 
-modelClass := CMModel installModelFromFile: 'model.cmx' asFileReference.
-model := modelClass new.
+Arguments, each written as name=value:
+  model          the zip of the model folder
+  workspace      a folder that does not exist yet, where the model is unzipped and installed
+  results        the JSON file to write
+  initSelector   the init method
+  stepSelector   the control method
+  maxSteps       the simulation stops after this step
+  stopCondition  a method of the model returning a Boolean, which also stops the simulation, or nothing
+  seed           the random seed
+  parameter:Class.getter=value   a parameter of an entity class, the value written in JSON
+  parameter:getter=value         a parameter of the model
+  probe:selector                 a method of the model returning a number"
 
-arguments := Smalltalk arguments.
+[
+	| arguments valueOf workspace folder modelClass model maxSteps stopSelector parameterValues simulation probes results |
+	arguments := Smalltalk arguments.
+	valueOf := [ :name |
+		(arguments
+			detect: [ :each | each beginsWith: name , '=' ]
+			ifNone: [ self error: 'Missing argument ' , name ]) allButFirst: name size + 1 ].
 
-argNamed := [ :name | (arguments detect: [ :each | each beginsWith: name ]) copyAfter: $= ].
+	workspace := CMWorkspace createAt: (valueOf value: 'workspace') asFileReference.
+	CMWorkspace current: workspace.
+	folder := workspace addFromZip: (valueOf value: 'model') asFileReference.
+	workspace install: folder.
+	modelClass := ((workspace installedModelNamed: folder baselineName) loadedPackages
+		flatCollect: [ :each | each definedClasses ])
+		detect: [ :each | each inheritsFrom: CMModel ].
+	model := modelClass new.
 
-initSelector := (argNamed value: 'initSelector') asSymbol.
-stepSelector := (argNamed value: 'stepSelector') asSymbol.
-maxSteps := STONJSON fromString: (argNamed value: 'maxSteps').
-stopConditionSelector := (argNamed value: 'stopCondition') asSymbol.
-seed := STONJSON fromString: (argNamed value: 'seed').
+	parameterValues := Dictionary new.
+	(arguments select: [ :each | each beginsWith: 'parameter:' ]) do: [ :each |
+		| nameAndValue names |
+		nameAndValue := (each allButFirst: 'parameter:' size) splitOn: $=.
+		names := nameAndValue first splitOn: $..
+		names size = 1 ifTrue: [ names := { modelClass name } , names ].
+		(parameterValues at: names first ifAbsentPut: [ Dictionary new ])
+			at: names second
+			put: (STONJSON fromString: nameAndValue second) ].
+	model parameterValues: parameterValues.
 
-stopCondition := stopConditionSelector
-  ifEmpty: [
-    [ :model |
-      model simulationContext currentTimeStep >= maxSteps
-    ]
-  ]
-  ifNotEmpty: [
-    [ :model |
-      model simulationContext currentTimeStep >= maxSteps
-        or: [ model perform: stopConditionSelector ]
-    ]
-  ].
+	maxSteps := (valueOf value: 'maxSteps') asNumber.
+	stopSelector := (valueOf value: 'stopCondition') asSymbol.
+	simulation := (CMSimulation for: model)
+		activeInitSelector: (valueOf value: 'initSelector') asSymbol;
+		activeControlSelector: (valueOf value: 'stepSelector') asSymbol;
+		randomSeed: (valueOf value: 'seed') asNumber;
+		recordLastStepOnly;
+		stopWhen: (stopSelector
+			ifEmpty: [ [ :aModel | aModel currentTimeStep >= maxSteps ] ]
+			ifNotEmpty: [
+				[ :aModel | aModel currentTimeStep >= maxSteps or: [ aModel perform: stopSelector ] ] ]);
+		yourself.
+	simulation
+		initializeSimulation;
+		runUntilStopped.
 
-parameterArguments := arguments
-  select: [ :each | each beginsWith: 'parameter:' ].
-
-parameterArguments do: [ :argument |
-  | parts fullName value nameParts target parameterName |
-
-  parts := (argument allButFirst: 'parameter:' size) splitOn: $=.
-  fullName := parts first.
-  value := STONJSON fromString: parts second.
-
-  nameParts := fullName splitOn: $..
-
-  nameParts size = 1
-    ifTrue: [
-      target := model.
-      parameterName := nameParts first
-    ]
-    ifFalse: [
-      target := Smalltalk at: nameParts first asSymbol.
-      parameterName := nameParts second
-    ].
-
-  target
-    perform: parameterName asSymbol asMutator
-    with: value
-].
-
-probeArguments := arguments
-  select: [ :each | each beginsWith: 'probe:' ].
-
-writeResults := [
-  | probes results |
-
-  probes := probeArguments collect: [ :each |
-    each allButFirst: 'probe:' size
-  ].
-
-  results := Dictionary new.
-
-  probes do: [ :probeName |
-    results
-      at: probeName
-      put: (model perform: probeName asSymbol)
-  ].
-
-  'results.json' asFileReference
-    ensureDelete;
-    writeStreamDo: [ :stream |
-      stream nextPutAll: (STONJSON toString: results)
-    ].
-
-  Smalltalk snapshot: false andQuit: true
-].
-
-(CMSimulation for: model)
-  activeInitSelector: initSelector;
-  activeControlSelector: stepSelector;
-  stopWhen: stopCondition;
-  whenFinishedDo: writeResults;
-  randomSeed: seed;
-  initializeSimulation;
-  runAllSteps.
+	probes := (arguments select: [ :each | each beginsWith: 'probe:' ])
+		collect: [ :each | each allButFirst: 'probe:' size ].
+	results := Dictionary new.
+	probes do: [ :each | results at: each put: (model perform: each asSymbol) asFloat ].
+	(valueOf value: 'results') asFileReference
+		ensureDelete;
+		writeStreamDo: [ :stream | stream nextPutAll: (STONJSON toString: results) ].
+	Smalltalk snapshot: false andQuit: true ]
+	on: Error
+	do: [ :error |
+		Stdio stderr
+			nextPutAll: 'Cormas: ' , error description;
+			lf.
+		error signalerContext stack do: [ :each |
+			Stdio stderr
+				nextPutAll: each printString;
+				lf ].
+		Smalltalk exitFailure ]

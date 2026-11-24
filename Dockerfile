@@ -25,8 +25,9 @@ COPY run.sh /app/run.sh
 
 RUN chmod +x /app/run.sh
 
-# Install Cormas once when building the image
-RUN ./pharo --headless Pharo.image st /app/install-cormas.st
+# Install Cormas once when building the image: a branch, a tag or a commit of github.com/cormas/cormas
+ARG CORMAS_VERSION=dev
+RUN CORMAS_VERSION=$CORMAS_VERSION ./pharo --headless Pharo.image st /app/install-cormas.st
 
 # OpenMOLE often runs as uid 1000
 RUN chown -R 1000:1000 /app
